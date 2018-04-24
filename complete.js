@@ -70,7 +70,7 @@ connection.onCompletion(async event => {
     console.log(completions);
     return completions.completions.map(completion => ({
         label: completion.name,
-        detail: completion.type + ' lol',
+        detail: completion.type,
     }));
 });
 
