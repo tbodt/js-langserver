@@ -47,6 +47,7 @@ module.exports = function(root) {
     // TODO load defs
 
     return {
+        projectDir: root,
         plugins: project.plugins,
         ecmaVersion: project.ecmaVersion || 6,
         dependencyBudget: project.dependencyBudget,

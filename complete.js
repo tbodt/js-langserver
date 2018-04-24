@@ -1,4 +1,5 @@
 const {Server: TernServer} = require('tern');
+const fs = require('fs');
 const path = require('path');
 const util = require('util');
 const URI = require('vscode-uri').default;
@@ -9,13 +10,23 @@ const {connection, documents} = require('./index');
 let tern;
 
 function nameFromUri(uri) {
-    return path.relative(tern.root, URI.parse(uri).fsPath);
+    return path.relative(tern.options.projectDir, URI.parse(uri).fsPath);
 }
 
 function startTern(root) {
-    const ternConfig = ternProject(root);
-    tern = new TernServer(ternConfig);
-    tern.root = root;
+    tern = new TernServer(Object.assign(ternProject(root), {
+        getFile(file, cb) {
+            fs.readFileSync(path.resolve(root, file), 'utf8', cb);
+        },
+        normalizeFilename(name) {
+            name = path.resolve(root, name);
+            try {
+                name = fs.realpathSync(name);
+            } catch (e) {} // eslint-disable-line no-empty
+            return path.relative(root, name);
+        },
+        async: true,
+    }));
     tern.asyncRequest = util.promisify(tern.request);
     // TODO loadEagerly
 }
@@ -67,7 +78,6 @@ connection.onCompletion(async event => {
             caseInsensitive: true,
         },
     });
-    console.log(completions);
     return completions.completions.map(completion => ({
         label: completion.name,
         detail: completion.type,
