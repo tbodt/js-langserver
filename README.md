@@ -1,4 +1,4 @@
-# js-langserver
+# js-langserver ![](https://img.shields.io/npm/v/js-langserver.svg) [![dependencies Status](https://david-dm.org/tbodt/js-langserver/status.svg)](https://david-dm.org/tbodt/js-langserver)
 
 A simple language server for JavaScript, powered by ESLint and Tern.
 
