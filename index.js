@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 const lsp = require('vscode-languageserver');
 
 const connection = lsp.createConnection();
