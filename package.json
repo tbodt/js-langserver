@@ -1,0 +1,15 @@
+{
+  "name": "js-langserver",
+  "description": "A simple language server for JavaScript, powered by eslint and tern.",
+  "author": "Theodore Dubois <tblodt@icloud.com> (tbodt.com)",
+  "repository": "tbodt/js-langserver",
+  "version": "0.1.0",
+  "bin": "./index.js",
+  "license": "MIT",
+  "dependencies": {
+    "eslint": "^4.19.1",
+    "resolve-from": "^4.0.0",
+    "tern": "^0.21.0",
+    "vscode-languageserver": "^4.1.2"
+  }
+}
