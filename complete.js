@@ -9,14 +9,10 @@ const {connection, documents} = require('./index');
 
 let tern;
 
-function nameFromUri(uri) {
-    return path.relative(tern.options.projectDir, URI.parse(uri).fsPath);
-}
-
 function startTern(root) {
     tern = new TernServer(Object.assign(ternProject(root), {
         getFile(file, cb) {
-            fs.readFileSync(path.resolve(root, file), 'utf8', cb);
+            fs.readFile(path.resolve(root, file), 'utf8', cb);
         },
         normalizeFilename(name) {
             name = path.resolve(root, name);
@@ -43,6 +39,12 @@ connection.onInitialize(params => {
     };
 });
 
+// lsp <-> tern conversions
+const nameFromUri = uri => path.relative(tern.options.projectDir, URI.parse(uri).fsPath);
+const uriFromName = name => URI.file(path.resolve(tern.options.projectDir, name)).toString();
+const ternPosition = ({line, character}) => ({line, ch: character});
+const lspPosition = ({line, ch}) => ({line, character: ch});
+
 const onUpdate = async event => {
     const document = event.document;
     await tern.asyncRequest({
@@ -66,21 +68,36 @@ documents.onDidClose(async event => {
 });
 
 connection.onCompletion(async event => {
-    let position = event.position;
-    position = {line: position.line, ch: position.character};
-    const completions = await tern.asyncRequest({
+    const {completions} = await tern.asyncRequest({
         query: {
             type: 'completions',
             file: nameFromUri(event.textDocument.uri),
-            end: position,
+            end: ternPosition(event.position),
             types: true,
             docs: true,
             caseInsensitive: true,
         },
     });
-    return completions.completions.map(completion => ({
+    return completions.map(completion => ({
         label: completion.name,
         detail: completion.type,
     }));
 });
 
+connection.onDefinition(async event => {
+    const {start, end, file} = await tern.asyncRequest({
+        query: {
+            type: 'definition',
+            file: nameFromUri(event.textDocument.uri),
+            end: ternPosition(event.position),
+            lineCharPositions: true,
+        },
+    });
+    return {
+        uri: uriFromName(file),
+        range: {
+            start: lspPosition(start),
+            end: lspPosition(end),
+        },
+    };
+});
