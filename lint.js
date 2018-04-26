@@ -1,4 +1,3 @@
-const assert = require('assert')
 const URI = require('vscode-uri').default;
 const lsp = require('vscode-languageserver');
 const eslint = require('eslint');
@@ -14,8 +13,10 @@ function lintDocument(event) {
     const document = event.document;
     const linter = new eslint.CLIEngine();
     const report = linter.executeOnText(document.getText(), URI.parse(document.uri).fsPath);
-    assert(report.results.length == 1);
-    const diagnostics = report.results[0].messages.map(message => ({
+    if (report.results.length > 1)
+        console.error(`too many reports ${report.results.length}!`, report);
+    const messages = report.results[0] ? report.results[0].messages : [];
+    const diagnostics = messages.map(message => ({
         severity: SEVERITY_MAP[message.severity],
         range: {
             start: {line: message.line - 1, character: message.column - 1},
