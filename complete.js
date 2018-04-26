@@ -5,39 +5,23 @@ const util = require('util');
 const URI = require('vscode-uri').default;
 const ternProject = require('./tern-project');
 
-const {connection, documents} = require('./index');
+const {connection, documents, root} = require('./index');
 
-let tern;
-
-function startTern(root) {
-    tern = new TernServer(Object.assign(ternProject(root), {
-        getFile(file, cb) {
-            fs.readFile(path.resolve(root, file), 'utf8', cb);
-        },
-        normalizeFilename(name) {
-            name = path.resolve(root, name);
-            try {
-                name = fs.realpathSync(name);
-            } catch (e) {} // eslint-disable-line no-empty
-            return path.relative(root, name);
-        },
-        async: true,
-    }));
-    tern.asyncRequest = util.promisify(tern.request);
-    // TODO loadEagerly
-}
-
-connection.onInitialize(params => {
-    startTern(params.rootPath);
-    return {
-        capabilities: {
-            textDocumentSync: documents.syncKind,
-            completionProvider: {
-                triggerCharacters: ['.'],
-            },
-        },
-    };
-});
+const tern = new TernServer(Object.assign(ternProject(root), {
+    getFile(file, cb) {
+        fs.readFile(path.resolve(root, file), 'utf8', cb);
+    },
+    normalizeFilename(name) {
+        name = path.resolve(root, name);
+        try {
+            name = fs.realpathSync(name);
+        } catch (e) {} // eslint-disable-line no-empty
+        return path.relative(root, name);
+    },
+    async: true,
+}));
+// TODO loadEagerly
+tern.asyncRequest = util.promisify(tern.request);
 
 // lsp <-> tern conversions
 const nameFromUri = uri => path.relative(tern.options.projectDir, URI.parse(uri).fsPath);

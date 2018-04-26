@@ -3,9 +3,9 @@ const fs = require('fs');
 const path = require('path');
 const resolveFrom = require('resolve-from');
 
-function readProject(root) {
+function readJson(file) {
     try {
-        return JSON.parse(fs.readFileSync(path.join(root, '.tern-project')));
+        return JSON.parse(fs.readFileSync(file));
     } catch (e) {
         return {};
     }
@@ -14,8 +14,10 @@ function readProject(root) {
 const ternRoot = path.resolve(require.resolve('tern'), '../..');
 
 module.exports = function(root) {
-    const project = readProject(root);
-
+    let defaultProject = {};
+    if (process.env.HOME)
+        defaultProject = readJson(path.join(process.env.HOME, '.tern-config'));
+    const project = Object.assign(defaultProject, readJson(path.join(root, '.tern-project')));
     function find(kind, name, ext) {
         let filename = name;
         if (!filename.endsWith(ext))

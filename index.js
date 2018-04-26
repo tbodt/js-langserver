@@ -5,8 +5,20 @@ const connection = lsp.createConnection();
 const documents = new lsp.TextDocuments();
 documents.listen(connection);
 
+connection.onInitialize(params => {
+    module.exports.root = params.rootPath;
+    require('./lint');
+    require('./complete');
+    return {
+        capabilities: {
+            textDocumentSync: documents.syncKind,
+            completionProvider: {
+                triggerCharacters: ['.'],
+            },
+        },
+    };
+});
+
 module.exports = {connection, documents};
-require('./lint');
-require('./complete');
 
 connection.listen();
