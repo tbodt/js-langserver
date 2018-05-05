@@ -77,6 +77,8 @@ connection.onDefinition(async event => {
             lineCharPositions: true,
         },
     });
+    if (file === undefined)
+        return null;
     return {
         uri: uriFromName(file),
         range: {
