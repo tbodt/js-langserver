@@ -29,6 +29,16 @@ const uriFromName = name => URI.file(path.resolve(tern.options.projectDir, name)
 const ternPosition = ({line, character}) => ({line, ch: character});
 const lspPosition = ({line, ch}) => ({line, character: ch});
 
+function lspLocation(file, start, end) {
+    return {
+        uri: uriFromName(file),
+        range: {
+            start: lspPosition(start),
+            end: lspPosition(end),
+        },
+    };
+}
+
 const onUpdate = async event => {
     const document = event.document;
     await tern.asyncRequest({
@@ -69,7 +79,7 @@ connection.onCompletion(async event => {
 });
 
 connection.onDefinition(async event => {
-    const {start, end, file} = await tern.asyncRequest({
+    const {file, start, end} = await tern.asyncRequest({
         query: {
             type: 'definition',
             file: nameFromUri(event.textDocument.uri),
@@ -79,13 +89,7 @@ connection.onDefinition(async event => {
     });
     if (file === undefined)
         return null;
-    return {
-        uri: uriFromName(file),
-        range: {
-            start: lspPosition(start),
-            end: lspPosition(end),
-        },
-    };
+    return lspLocation(file, start, end);
 });
 
 connection.onHover(async event => {
@@ -111,4 +115,16 @@ connection.onHover(async event => {
         lines.push(info.url);
 
     return {contents: lines.join('\n')};
+});
+
+connection.onReferences(async event => {
+    const {refs} = await tern.asyncRequest({
+        query: {
+            type: 'refs',
+            file: nameFromUri(event.textDocument.uri),
+            end: ternPosition(event.position),
+            lineCharPositions: true,
+        },
+    });
+    return refs.map(({file, start, end}) => lspLocation(file, start, end));
 });
