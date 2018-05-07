@@ -87,3 +87,28 @@ connection.onDefinition(async event => {
         },
     };
 });
+
+connection.onHover(async event => {
+    const info = await tern.asyncRequest({
+        query: {
+            type: 'type',
+            file: nameFromUri(event.textDocument.uri),
+            end: ternPosition(event.position),
+            lineCharPositions: true,
+        },
+    });
+    const lines = [];
+
+    const name = info.exprName || info.name;
+    let description = `${name}: ${info.type}`;
+    if (info.type.startsWith('fn(') && name !== undefined)
+        description = name + info.type.slice(2);
+    lines.push(description);
+
+    if (info.doc !== undefined)
+        lines.push(info.doc);
+    if (info.url !== undefined)
+        lines.push(info.url);
+
+    return {contents: lines.join('\n')};
+});

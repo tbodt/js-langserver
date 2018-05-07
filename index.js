@@ -8,7 +8,7 @@ documents.listen(connection);
 connection.onInitialize(params => {
     module.exports.root = params.rootPath;
     require('./lint');
-    require('./complete');
+    require('./analysis');
     return {
         capabilities: {
             textDocumentSync: documents.syncKind,
