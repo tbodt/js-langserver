@@ -22,6 +22,16 @@ const tern = new TernServer(Object.assign(ternProject(root), {
 }));
 // TODO loadEagerly
 tern.asyncRequest = util.promisify(tern.request);
+async function ternRequest(event, type, options = {}) {
+    return await tern.asyncRequest({
+        query: Object.assign({
+            type,
+            file: nameFromUri(event.textDocument.uri),
+            end: ternPosition(event.position),
+            lineCharPositions: true,
+        }, options),
+    });
+}
 
 // lsp <-> tern conversions
 const nameFromUri = uri => path.relative(tern.options.projectDir, URI.parse(uri).fsPath);
@@ -62,15 +72,10 @@ documents.onDidClose(async event => {
 });
 
 connection.onCompletion(async event => {
-    const {completions} = await tern.asyncRequest({
-        query: {
-            type: 'completions',
-            file: nameFromUri(event.textDocument.uri),
-            end: ternPosition(event.position),
-            types: true,
-            docs: true,
-            caseInsensitive: true,
-        },
+    const {completions} = await ternRequest(event, 'completions', {
+        types: true,
+        docs: true,
+        caseInsensitive: true,
     });
     return completions.map(completion => ({
         label: completion.name,
@@ -79,28 +84,14 @@ connection.onCompletion(async event => {
 });
 
 connection.onDefinition(async event => {
-    const {file, start, end} = await tern.asyncRequest({
-        query: {
-            type: 'definition',
-            file: nameFromUri(event.textDocument.uri),
-            end: ternPosition(event.position),
-            lineCharPositions: true,
-        },
-    });
+    const {file, start, end} = await ternRequest(event, 'definition');
     if (file === undefined)
         return null;
     return lspLocation(file, start, end);
 });
 
 connection.onHover(async event => {
-    const info = await tern.asyncRequest({
-        query: {
-            type: 'type',
-            file: nameFromUri(event.textDocument.uri),
-            end: ternPosition(event.position),
-            lineCharPositions: true,
-        },
-    });
+    const info = await ternRequest(event, 'type');
     const lines = [];
 
     const name = info.exprName || info.name;
@@ -118,13 +109,16 @@ connection.onHover(async event => {
 });
 
 connection.onReferences(async event => {
-    const {refs} = await tern.asyncRequest({
-        query: {
-            type: 'refs',
-            file: nameFromUri(event.textDocument.uri),
-            end: ternPosition(event.position),
-            lineCharPositions: true,
-        },
-    });
+    const {refs} = await ternRequest(event, 'refs');
     return refs.map(({file, start, end}) => lspLocation(file, start, end));
+});
+
+connection.onRenameRequest(async event => {
+    const {changes} = await ternRequest(event, 'rename', {
+        newName: event.newName,
+    });
+    return changes.map(({file, start, end, text}) => ({
+        range: lspLocation(file, start, end),
+        newText: text,
+    }));
 });
