@@ -7,9 +7,14 @@
   "bin": "./index.js",
   "license": "MIT",
   "dependencies": {
-    "eslint": "^4.19.1",
     "resolve-from": "^4.0.0",
     "tern": "^0.21.0",
-    "vscode-languageserver": "^4.1.2"
+    "vscode-languageserver": "^4.1.2",
+    "vscode-uri": "^1.0.6"
+  },
+  "devDependencies": {
+    "eslint": "^5.8.0",
+    "eslint-config-airbnb-base": "^13.1.0",
+    "eslint-plugin-import": "^2.14.0"
   }
 }
