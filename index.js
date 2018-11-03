@@ -1,14 +1,14 @@
+#!/usr/bin/env node
 const lsp = require('vscode-languageserver');
-const createLinter = require('./lint');
 
 const connection = lsp.createConnection();
 const documents = new lsp.TextDocuments();
-const capabilities = {};
+documents.listen(connection);
 
 connection.onInitialize((params) => {
   module.exports.root = params.rootPath;
-  Object.assign(capabilities, createLinter(params.rootPath));
-  require('./analysis');
+  require('./lint'); // eslint-disable-line global-require
+  require('./analysis'); // eslint-disable-line global-require
   return {
     capabilities: {
       textDocumentSync: documents.syncKind,
@@ -19,23 +19,6 @@ connection.onInitialize((params) => {
   };
 });
 
-documents.onDidOpen((event) => {
-  connection.sendDiagnostics({
-    uri: event.document.uri,
-    diagnostics: capabilities.getDiagnostics(event),
-  });
-});
-documents.onDidChangeContent((event) => {
-  connection.sendDiagnostics({
-    uri: event.document.uri,
-    diagnostics: capabilities.getDiagnostics(event),
-  });
-});
-documents.onDidClose((event) => {
-  connection.sendDiagnostics({ uri: event.document.uri, diagnostics: [] });
-});
-
-documents.listen(connection);
-connection.listen();
-
 module.exports = { connection, documents };
+
+connection.listen();

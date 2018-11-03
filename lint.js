@@ -2,20 +2,17 @@ const resolveFrom = require('resolve-from');
 const URI = require('vscode-uri').default;
 const lsp = require('vscode-languageserver');
 
+const { connection, documents, root } = require('./index');
+
 const SEVERITY_MAP = {
   1: lsp.DiagnosticSeverity.Warning,
   2: lsp.DiagnosticSeverity.Error,
 };
 
-const lintersByRoot = {};
-
-function getLinter(root) {
-  if (!lintersByRoot[root]) {
-    const eslintModulePath = resolveFrom(root, 'eslint');
-    const eslint = require(eslintModulePath); // eslint-disable-line
-    lintersByRoot[root] = new eslint.CLIEngine({ cwd: root });
-  }
-  return lintersByRoot[root];
+function getLinter() {
+  const eslintModulePath = resolveFrom(root, 'eslint');
+  const eslint = require(eslintModulePath); // eslint-disable-line
+  return new eslint.CLIEngine({ cwd: root });
 }
 
 function getDiagnosticsForFile(linter, text, path) {
@@ -38,10 +35,26 @@ function getDiagnosticsForFile(linter, text, path) {
   return diagnostics;
 }
 
-module.exports = root => ({
-  getDiagnostics: event => getDiagnosticsForFile(
+function getDiagnostics(event) {
+  return getDiagnosticsForFile(
     getLinter(root),
     event.document.getText(),
     URI.parse(event.document.uri).fsPath,
-  ),
+  );
+}
+
+documents.onDidOpen((event) => {
+  connection.sendDiagnostics({
+    uri: event.document.uri,
+    diagnostics: getDiagnostics(event),
+  });
+});
+documents.onDidChangeContent((event) => {
+  connection.sendDiagnostics({
+    uri: event.document.uri,
+    diagnostics: getDiagnostics(event),
+  });
+});
+documents.onDidClose((event) => {
+  connection.sendDiagnostics({ uri: event.document.uri, diagnostics: [] });
 });
