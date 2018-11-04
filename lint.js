@@ -5,9 +5,6 @@ const eslint = require('eslint');
 
 const {connection, documents, root} = require('./index');
 
-// try to load the eslintrc
-new eslint.CLIEngine({cwd: root});
-
 const SEVERITY_MAP = {
     1: lsp.DiagnosticSeverity.Warning,
     2: lsp.DiagnosticSeverity.Error,
