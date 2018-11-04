@@ -11,10 +11,15 @@ connection.onInitialize(params => {
     require('./analysis');
     return {
         capabilities: {
-            textDocumentSync: documents.syncKind,
             completionProvider: {
+                resolveProvider: true,
                 triggerCharacters: ['.'],
             },
+            definitionProvider: true,
+            hoverProvider: true,
+            renameProvider: true,
+            referencesProvider: true,
+            textDocumentSync: documents.syncKind,
         },
     };
 });
