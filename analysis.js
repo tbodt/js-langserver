@@ -39,13 +39,19 @@ const uriFromName = name => URI.file(path.resolve(tern.options.projectDir, name)
 const ternPosition = ({line, character}) => ({line, ch: character});
 const lspPosition = ({line, ch}) => ({line, character: ch});
 
-function lspLocation(file, start, end) {
+function lspRange(start, end) {
     return {
-        uri: uriFromName(file),
         range: {
             start: lspPosition(start),
             end: lspPosition(end),
         },
+    };
+}
+
+function lspLocation(file, start, end) {
+    return {
+        uri: uriFromName(file),
+        ...lspRange(start, end),
     };
 }
 
@@ -117,8 +123,17 @@ connection.onRenameRequest(async event => {
     const {changes} = await ternRequest(event, 'rename', {
         newName: event.newName,
     });
-    return changes.map(({file, start, end, text}) => ({
-        range: lspLocation(file, start, end),
-        newText: text,
-    }));
+    const changesByFile = changes.reduce((acc, change) => {
+        const { file, start, end, text } = change;
+        const completeName = uriFromName(file);
+        if (!acc[completeName]) {
+            acc[completeName] = [];
+        }
+        acc[completeName].push({
+            newText: text,
+            ...lspRange(start, end),
+        });
+        return acc;
+    }, {});
+    return { changes: changesByFile };
 });
