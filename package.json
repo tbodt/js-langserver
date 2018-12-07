@@ -3,7 +3,7 @@
   "description": "A simple language server for JavaScript, powered by ESLint and Tern.",
   "author": "Theodore Dubois <tblodt@icloud.com> (tbodt.com)",
   "repository": "tbodt/js-langserver",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "bin": "./index.js",
   "license": "MIT",
   "dependencies": {
