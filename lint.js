@@ -1,20 +1,24 @@
+const resolveFrom = require('resolve-from');
 const URI = require('vscode-uri').default;
 const lsp = require('vscode-languageserver');
 const eslint = require('eslint');
 
 const {connection, documents, root} = require('./index');
 
-// try to load the eslintrc
-new eslint.CLIEngine({cwd: root});
-
 const SEVERITY_MAP = {
     1: lsp.DiagnosticSeverity.Warning,
     2: lsp.DiagnosticSeverity.Error,
 };
 
+function getLinter() {
+  const eslintModulePath = resolveFrom(root, 'eslint');
+  const eslint = require(eslintModulePath); // eslint-disable-line
+  return new eslint.CLIEngine({ cwd: root });
+}
+
 function lintDocument(event) {
     const document = event.document;
-    const linter = new eslint.CLIEngine({cwd: root});
+    const linter = getLinter();
     const report = linter.executeOnText(document.getText(), URI.parse(document.uri).fsPath);
     const messages = report.results[0] ? report.results[0].messages : [];
     const diagnostics = messages.map(message => ({
