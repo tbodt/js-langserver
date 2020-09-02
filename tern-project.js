@@ -34,7 +34,7 @@ module.exports = function(root) {
     }
 
     // load plugins
-    Object.keys(project.plugins).forEach(plugin => {
+    Object.keys(project.plugins || {}).forEach(plugin => {
         const file = find('plugin', plugin, '.js');
         if (file === undefined) {
             // eslint-disable-next-line no-console
