@@ -46,11 +46,22 @@ module.exports = function(root) {
             mod.initialize(ternRoot);
     });
 
-    // TODO load defs
+    // load defs
+    const defs = (project.libs || []).reduce((acc, lib) => {
+        const file = find('defs', lib, '.json');
+        if (file === undefined) {
+            // eslint-disable-next-line no-console
+            console.error(`Failed to load tern lib ${lib}`);
+            return;
+        }
+        acc.push(file);
+        return acc;
+    }, []);
 
     return {
         projectDir: root,
         plugins: project.plugins,
+        defs,
         ecmaVersion: project.ecmaVersion || 6,
         dependencyBudget: project.dependencyBudget,
     };
