@@ -27,7 +27,7 @@ module.exports = function(root) {
         if (fs.existsSync(file)) return file;
         file = path.resolve(ternRoot, kind, filename);
         if (fs.existsSync(file)) return file;
-        file = resolveFrom(`tern-${name}`, root);
+        file = resolveFrom(root, `tern-${name}`);
         if (fs.existsSync(file)) return file;
         file = require.resolve(`tern-${name}`);
         if (fs.existsSync(file)) return file;
