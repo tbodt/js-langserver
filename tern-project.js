@@ -61,6 +61,7 @@ module.exports = function(root) {
     return {
         projectDir: root,
         plugins: project.plugins,
+        loadEagerly: project.loadEagerly,
         defs,
         ecmaVersion: project.ecmaVersion || 6,
         dependencyBudget: project.dependencyBudget,
