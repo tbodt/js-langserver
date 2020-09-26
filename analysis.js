@@ -7,7 +7,6 @@ const {connection, documents, root} = require('./index');
 
 const tern = bootstrapServer({
   projectDir: root,
-  debug: true,
 });
 tern.asyncRequest = util.promisify(tern.request);
 async function ternRequest(event, type, options = {}) {

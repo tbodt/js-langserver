@@ -47,16 +47,16 @@ module.exports = function(root) {
     });
 
     // load defs
-    const defs = (project.libs || []).reduce((acc, lib) => {
+    const defs = [];
+    for (const lib of (project.libs || [])) {
         const file = find('defs', lib, '.json');
         if (file === undefined) {
             // eslint-disable-next-line no-console
             console.error(`Failed to load tern lib ${lib}`);
-            return;
+            continue;
         }
-        acc.push(file);
-        return acc;
-    }, []);
+        defs.push(file);
+    }
 
     return {
         projectDir: root,
