@@ -1,26 +1,13 @@
-const {Server: TernServer} = require('tern');
-const fs = require('fs');
+const bootstrapServer = require('tern/lib/bootstrap');
 const path = require('path');
 const util = require('util');
 const URI = require('vscode-uri').default;
-const ternProject = require('./tern-project');
 
 const {connection, documents, root} = require('./index');
 
-const tern = new TernServer(Object.assign(ternProject(root), {
-    getFile(file, cb) {
-        fs.readFile(path.resolve(root, file), 'utf8', cb);
-    },
-    normalizeFilename(name) {
-        name = path.resolve(root, name);
-        try {
-            name = fs.realpathSync(name);
-        } catch (e) {} // eslint-disable-line no-empty
-        return path.relative(root, name);
-    },
-    async: true,
-}));
-// TODO loadEagerly
+const tern = bootstrapServer({
+  projectDir: root,
+});
 tern.asyncRequest = util.promisify(tern.request);
 async function ternRequest(event, type, options = {}) {
     return await tern.asyncRequest({

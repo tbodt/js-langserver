@@ -27,7 +27,7 @@ module.exports = function(root) {
         if (fs.existsSync(file)) return file;
         file = path.resolve(ternRoot, kind, filename);
         if (fs.existsSync(file)) return file;
-        file = resolveFrom(`tern-${name}`, root);
+        file = resolveFrom(root, `tern-${name}`);
         if (fs.existsSync(file)) return file;
         file = require.resolve(`tern-${name}`);
         if (fs.existsSync(file)) return file;
@@ -46,11 +46,23 @@ module.exports = function(root) {
             mod.initialize(ternRoot);
     });
 
-    // TODO load defs
+    // load defs
+    const defs = [];
+    for (const lib of (project.libs || [])) {
+        const file = find('defs', lib, '.json');
+        if (file === undefined) {
+            // eslint-disable-next-line no-console
+            console.error(`Failed to load tern lib ${lib}`);
+            continue;
+        }
+        defs.push(file);
+    }
 
     return {
         projectDir: root,
         plugins: project.plugins,
+        loadEagerly: project.loadEagerly,
+        defs,
         ecmaVersion: project.ecmaVersion || 6,
         dependencyBudget: project.dependencyBudget,
     };
